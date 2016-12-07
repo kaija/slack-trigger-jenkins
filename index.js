@@ -3,7 +3,7 @@ var config = require('./config.json');
 var winston = require('winston');
 var request = require('request');
 var bot = new SlackBot({
-    token: config.slack_token, // Add a bot https://my.slack.com/services/new/bot and put the token  
+    token: config.slack_token, // Add a bot https://my.slack.com/services/new/bot and put the token
     name: config.slack_name
 });
 
@@ -42,15 +42,20 @@ var jenkins = function(cmd) {
           token: config.jenkins_token
         }
       };
+    }else if (config.jenkins_method == 'POST') {
+      option = {
+        method: 'POST',
+        uri: config.jenkins_url + 'job/' + cmd[2] + '/build?token=' + config.jenkins_token
+      };
     }
-    winston.info('option:' + option);
+    winston.info('option:' + JSON.stringify(option));
     request(option, function(err, res, body){
-      if (!err && res.statusCode == 200) {
-        winston.info(body);
+      winston.info('res:' + JSON.stringify(res));
+      winston.info('body:' + body);
+      if (!err && (res.statusCode == 200 || res.statusCode == 201 )) {
         bot.postMessageToChannel('general', 'yes, sir', params);
       }else{
-        winston.info('code:' + res.statusCode);
-        winston.info('body:' + body);
+        winston.info('res:' + JSON.stringify(res) + '\nbody:' + body);
         bot.postMessageToChannel('general', 'jenkins take time off', params);
       }
     });
